@@ -1,2 +1,6 @@
 [tools]
-go = "1.21"
+go = "1.25"
+
+[tasks.swagger]
+description = "Generate Swagger docs into docs/swagger/"
+run = "swag init --output docs/swagger"

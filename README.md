@@ -15,6 +15,32 @@ go mod download
 go run main.go
 ```
 
+## Migration
+
+create
+
+```bash
+goose create [migration-name] sql
+```
+
+status
+
+```bash
+goose status
+```
+
+up
+
+```bash
+goose up
+```
+
+down
+
+```bash
+goose down
+```
+
 ## License
 
 MIT

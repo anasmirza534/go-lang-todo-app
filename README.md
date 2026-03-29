@@ -17,6 +17,12 @@ go run main.go
 
 ## Migration
 
+install goose
+
+```bash
+go install github.com/pressly/goose/v3/cmd/goose@latest
+```
+
 create
 
 ```bash

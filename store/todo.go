@@ -1,4 +1,4 @@
-package main
+package store
 
 import (
 	"database/sql"
@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	_ "modernc.org/sqlite"
 )
 
 type Todo struct {
@@ -17,68 +16,28 @@ type Todo struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func RunSqliteWorkbook() {
-	const sqliteFile string = "./todo.db"
-	db, err := sql.Open("sqlite", sqliteFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	db.SetMaxOpenConns(1)
-
-	log.Println("Database connected")
-
-	row := db.QueryRow("SELECT 25;")
-	var result int
-	if err := row.Scan(&result); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("Query result", result)
-
-	todos, err := ListAllTodos(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	todo, err := AddTodo(db, "buy groceries")
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Inserted todo: ", todo)
-
-	if len(todos) == 0 {
-		log.Println("No todo found in db.")
-	}
-
-	for idx, todo := range todos {
-		log.Println(idx, todo)
-	}
-
-	// err = DeleteTodo(db, "ef860e72-cac6-4cb5-949c-5e0085f0e599")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	todo, err = GetTodo(db, "7a141931-1ed7-4f72-b612-07c63191de49")
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(todo)
-	err = ToggleTodo(db, "7a141931-1ed7-4f72-b612-07c63191de49")
-	if err != nil {
-		log.Fatal(err)
-	}
-	todo, err = GetTodo(db, "7a141931-1ed7-4f72-b612-07c63191de49")
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(todo)
-}
-
 func ListAllTodos(db *sql.DB) ([]Todo, error) {
 	rows, err := db.Query("SELECT id, title, done, created_at FROM todo;")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	todos := []Todo{}
+	for rows.Next() {
+		todo, err := scanTodo(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		todos = append(todos, todo)
+	}
+
+	return todos, nil
+}
+
+func ListAllDoneTodos(db *sql.DB) ([]Todo, error) {
+	rows, err := db.Query("SELECT id, title, done, created_at FROM todo WHERE done = 1;")
 	if err != nil {
 		return nil, err
 	}
@@ -182,15 +141,3 @@ func scanTodo(s RowScanner) (Todo, error) {
 
 	return t, nil
 }
-
-// current goal:
-// ☑️ sqlite setup
-// ☑️ data modeling
-// ☑️ migration setup
-// ☑️ db query
-//    cli setup
-//
-// phase 2
-//    web server setup
-//    health route setup
-//    rest api
